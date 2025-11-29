@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FeedbackForm } from "@/components/FeedbackForm";
 import { LatestFeedback } from "@/components/LatestFeedback";
+import { supabase } from "@/lib/supabaseClient";
 
 interface FeedbackData {
   studentName: string;
@@ -13,8 +14,30 @@ interface FeedbackData {
 const Index = () => {
   const [latestFeedback, setLatestFeedback] = useState<FeedbackData | null>(null);
 
-  const handleSubmit = (data: FeedbackData) => {
-    setLatestFeedback(data);
+  const handleSubmit = async (data: FeedbackData) => {
+    const { data: insertedData, error } = await supabase
+      .from("feedback")
+      .insert({
+        student_name: data.studentName,
+        course_name: data.courseName,
+        email: data.email,
+        rating: Number(data.rating),
+        feedback_message: data.feedbackMessage,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error inserting feedback:", error);
+    } else {
+      setLatestFeedback({
+        studentName: insertedData.student_name,
+        courseName: insertedData.course_name,
+        email: insertedData.email,
+        rating: insertedData.rating,
+        feedbackMessage: insertedData.feedback_message,
+      });
+    }
   };
 
   return (
@@ -39,3 +62,4 @@ const Index = () => {
 };
 
 export default Index;
+
